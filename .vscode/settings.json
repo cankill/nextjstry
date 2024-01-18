@@ -3,12 +3,12 @@
         {
             "previewLimit": 50,
             "server": "localhost",
-            "port": 5432,
+            "port": 6432,
             "driver": "PostgreSQL",
             "name": "localhost",
             "database": "nextjs",
             "username": "sysadm",
-            "password": "password_to_change"
+            "password": "change_me"
         }
     ]
 }

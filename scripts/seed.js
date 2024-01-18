@@ -1,5 +1,3 @@
-
-import pgp from 'pg-promise'
 import pkg from 'pg';
 const { Pool } = pkg;
 // import { db } from '@vercel/postgres';
@@ -24,13 +22,9 @@ async function seedUsers(pool) {
     const insertedUsers = await Promise.all(
       users.map(async (user) => {
         const hashedPassword = await hash(user.password, 10);
-        
-        const query = pgp.as.format(`INSERT INTO users (id, name, email, password)
-                VALUES ($1, $2, $3, $4)
-                ON CONFLICT (id) DO NOTHING;`, user.id, user.name, user.email, hashedPassword);
-        console.log(query);
-
-        return pool.query(query);
+        const query = 'INSERT INTO users(id, name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING;';
+        const values = [user.id, user.name, user.email, hashedPassword];
+        return pool.query(query, values);
       }),
     );
 
@@ -64,12 +58,11 @@ async function seedInvoices(pool) {
 
     // Insert data into the "invoices" table
     const insertedInvoices = await Promise.all(
-      invoices.map(
-        (invoice) => pool.query(`
-        INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
-        ON CONFLICT (id) DO NOTHING;`),
-      ),
+      invoices.map(async (invoice) => {
+        const query = 'INSERT INTO invoices(customer_id, amount, status, date) VALUES ($1, $2, $3, $4)ON CONFLICT (id) DO NOTHING;'
+        const values = [invoice.customer_id, invoice.amount, invoice.status, invoice.date];
+        return pool.query(query, values);
+      }),
     );
 
     console.log(`Seeded ${insertedInvoices.length} invoices`);
@@ -101,13 +94,11 @@ async function seedCustomers(pool) {
 
     // Insert data into the "customers" table
     const insertedCustomers = await Promise.all(
-      customers.map(
-        (customer) => pool.query(`
-        INSERT INTO customers (id, name, email, image_url)
-        VALUES (${customer.id}, ${customer.name}, ${customer.email}, ${customer.image_url})
-        ON CONFLICT (id) DO NOTHING;
-      `),
-      ),
+      customers.map(async (customer) => {
+        const query = 'INSERT INTO customers (id, name, email, image_url) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING;';
+        const values = [customer.id, customer.name, customer.email, customer.image_url];
+        return pool.query(query, values)
+      }),
     );
 
     console.log(`Seeded ${insertedCustomers.length} customers`);
@@ -135,13 +126,11 @@ async function seedRevenue(pool) {
 
     // Insert data into the "revenue" table
     const insertedRevenue = await Promise.all(
-      revenue.map(
-        (rev) => pool.query(`
-        INSERT INTO revenue (month, revenue)
-        VALUES (${rev.month}, ${rev.revenue})
-        ON CONFLICT (month) DO NOTHING;
-      `),
-      ),
+      revenue.map(async (rev) => {
+        const query = 'INSERT INTO revenue (month, revenue) VALUES ($1, $2) ON CONFLICT (month) DO NOTHING;';
+        const values = [rev.month, rev.revenue];
+        return pool.query(query, values)
+      }),
     );
 
     console.log(`Seeded ${insertedRevenue.length} revenue`);
@@ -161,8 +150,8 @@ async function main() {
     user: 'sysadm',
     host: 'localhost',
     database: 'nextjs',
-    password: 'password_to_change',
-    port: 5432
+    password: 'change_me',
+    port: 6432
   })
 
   console.log(await pool.query('SELECT NOW()'))
