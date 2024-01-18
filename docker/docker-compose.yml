@@ -1,0 +1,41 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+      - POSTGRES_DB
+
+  # maria-db:
+  #   image: mariadb:10.11
+  #   # build:
+  #     # context: maria-db
+  #     # dockerfile: Dockerfile
+  #     # args:
+  #     #   - MARIADB_ROOT_PASSWORD
+  #     #   - MARIADB_DATABASE
+  #     #   - MARIADB_USER
+  #     #   - MARIADB_PASSWORD
+  #   container_name: maria-db
+  #   ports:
+  #     - "3306:3306"
+  #   init: true
+  #   tty: true
+  #   stdin_open: true
+  #   # env_file:
+  #   #   - path: "../.env"
+  #   #     required: true
+  #   environment:
+  #     - MARIADB_ROOT_PASSWORD
+  #     - MARIADB_DATABASE
+  #     - MARIADB_USER
+  #     - MARIADB_PASSWORD
+  #   healthcheck:
+  #     test: [ "CMD", "mariadb-admin", "--password=$MARIADB_ROOT_PASSWORD" ,"ping", "-h", "localhost" ]
+  #     start_period: 3s
+  #     interval: 3s
+  #     timeout: 3s
+  #     retries: 10
