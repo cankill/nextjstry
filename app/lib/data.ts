@@ -30,12 +30,12 @@ export async function fetchRevenue() {
     // Artificially delay a response for demo purposes.
     // Don't do this in production :)
 
-    console.log('Fetching revenue data...');
+    console.log('Revenue: Fetching data...');
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await pool.query<Revenue>(`SELECT * FROM revenue`);
 
-    console.log('Data fetch completed after 3 seconds.');
+    console.log('Revenue: Data fetch completed after 3 seconds.');
 
     return data.rows;
   } catch (error) {
@@ -47,12 +47,17 @@ export async function fetchRevenue() {
 export async function fetchLatestInvoices() {
   noStore();
   try {
+    console.log('Latest invoices: Fetching latest data...');
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+
     const data = await pool.query<LatestInvoiceRaw>(`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
       ORDER BY invoices.date DESC
       LIMIT 5`);
+
+    console.log('Latest invoices: Data fetch completed after 3 seconds.');
 
     const latestInvoices = data.rows.map((invoice) => ({
       ...invoice,
@@ -110,26 +115,29 @@ export async function fetchFilteredInvoices(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await pool.query<InvoicesTable>(`
-      SELECT
-        invoices.id,
-        invoices.amount,
-        invoices.date,
-        invoices.status,
-        customers.name,
-        customers.email,
-        customers.image_url
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
-      ORDER BY invoices.date DESC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `);
+    const queryStr = `SELECT
+                        invoices.id,
+                        invoices.amount,
+                        invoices.date,
+                        invoices.status,
+                        customers.name,
+                        customers.email,
+                        customers.image_url
+                      FROM invoices
+                      JOIN customers ON invoices.customer_id = customers.id
+                      WHERE
+                        customers.name ILIKE $1
+                        OR customers.email ILIKE $1
+                        OR invoices.amount::text ILIKE $1
+                        OR invoices.date::text ILIKE $1
+                        OR invoices.status ILIKE $1
+                      ORDER BY invoices.date DESC
+                      LIMIT $2 OFFSET $3`;
+    
+    console.log(`The query search is: %${query}%`)
+
+    const values = [`%${query}%`, ITEMS_PER_PAGE, offset]
+    const invoices = await pool.query<InvoicesTable>(queryStr, values);
 
     return invoices.rows;
   } catch (error) {
@@ -140,18 +148,20 @@ export async function fetchFilteredInvoices(
 
 export async function fetchInvoicesPages(query: string) {
   noStore();
-  try {
-    const count = await await pool.query(`SELECT COUNT(*)
-    FROM invoices
-    JOIN customers ON invoices.customer_id = customers.id
-    WHERE
-      customers.name ILIKE ${`%${query}%`} OR
-      customers.email ILIKE ${`%${query}%`} OR
-      invoices.amount::text ILIKE ${`%${query}%`} OR
-      invoices.date::text ILIKE ${`%${query}%`} OR
-      invoices.status ILIKE ${`%${query}%`}
-  `);
+  const queryString = `SELECT COUNT(*)
+                        FROM invoices
+                        JOIN customers ON invoices.customer_id = customers.id
+                      WHERE
+                        customers.name ILIKE $1 OR
+                        customers.email ILIKE $1 OR
+                        invoices.amount::text ILIKE $1 OR
+                        invoices.date::text ILIKE $1 OR
+                        invoices.status ILIKE $1`;
 
+  const values = [`%${query}%`];
+
+  try {
+    const count = await pool.query(queryString, values);
     const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
