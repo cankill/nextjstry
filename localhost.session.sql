@@ -9,10 +9,10 @@ SELECT
 FROM invoices
 JOIN customers ON invoices.customer_id = customers.id
 WHERE
-    customers.name ILIKE %aaaa%
-    OR customers.email ILIKE '%aaaa%'
-    OR invoices.amount::text ILIKE '%aaaa%'
-    OR invoices.date::text ILIKE '%aaaa%'
-    OR invoices.status ILIKE '%aaaa%'
+    customers.name ILIKE '%a%'
+    OR customers.email ILIKE '%a%'
+    OR invoices.amount::text ILIKE '%a%'
+    OR invoices.date::text ILIKE '%a%'
+    OR invoices.status ILIKE '%a%'
 ORDER BY invoices.date DESC
 LIMIT 10 OFFSET 0
