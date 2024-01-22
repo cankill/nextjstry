@@ -134,7 +134,7 @@ export async function fetchFilteredInvoices(
                       ORDER BY invoices.date DESC
                       LIMIT $2 OFFSET $3`;
     
-    console.log(`The query search is: %${query}%`)
+    // console.log(`The query search is: %${query}%`)
 
     const values = [`%${query}%`, ITEMS_PER_PAGE, offset]
     const invoices = await pool.query<InvoicesTable>(queryStr, values);
@@ -173,15 +173,17 @@ export async function fetchInvoicesPages(query: string) {
 export async function fetchInvoiceById(id: string) {
   noStore();
   try {
-    const data = await pool.query<InvoiceForm>(`
-      SELECT
-        invoices.id,
-        invoices.customer_id,
-        invoices.amount,
-        invoices.status
-      FROM invoices
-      WHERE invoices.id = ${id};
-    `);
+    const query = `SELECT
+                      invoices.id,
+                      invoices.customer_id,
+                      invoices.amount,
+                      invoices.status
+                  FROM invoices
+                  WHERE invoices.id = $1;`
+
+    const values = [id];
+
+    const data = await pool.query<InvoiceForm>(query, values);
 
     const invoice = data.rows.map((invoice) => ({
       ...invoice,
