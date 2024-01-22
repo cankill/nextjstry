@@ -26,6 +26,10 @@ const pool = new Pool({
     port: 6432
 })
 
+const createInvoiceSql = `INSERT INTO invoices (customer_id, amount, status, date) VALUES ($1, $2, $3, $4)`;
+const updateInvoiceSql = `UPDATE invoices SET customer_id=$1, amount=$2, status=$3 WHERE id=$4`;
+const deleteInvoiceSql = `DELETE FROM invoices WHERE id=$1`;
+
 export async function createInvoice(formData: FormData) {
     const { customerId, amount, status } = CreateInvoice.parse({
         customerId: formData.get('customerId'),
@@ -35,13 +39,17 @@ export async function createInvoice(formData: FormData) {
 
     const amountInCents = amount * 100;
     const date = new Date().toISOString().split('T')[0]
-
-    const sql = `INSERT INTO invoices (customer_id, amount, status, date) VALUES ($1, $2, $3, $4)`;
+   
     const values = [customerId, amountInCents, status, date];
 
-    console.log('Create invoice in DB');
-    await pool.query(sql, values);
-    console.log('Invoice created in DB');
+    try {
+        await pool.query(createInvoiceSql, values);
+    } catch(error) {
+        console.error(`Database error: Failed to create invoice. ${error}`)
+        return {
+            message: 'Database error: Failed to create invoice.',
+        };
+    }
 
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
@@ -55,13 +63,34 @@ export async function updateInvoice(id: string, formData: FormData) {
     });
 
     const amountInCents = amount * 100;
-    const sql = `UPDATE invoices SET customer_id=$1, amount=$2, status=$3 WHERE id=$4`;
     const values = [customerId, amountInCents, status, id];
 
-    console.log('Update invoice in DB');
-    await pool.query(sql, values);
-    console.log('Invoice updated in DB');
+    try {
+        await pool.query(updateInvoiceSql, values);
+    } catch(error) {
+        console.error(`Database error: Failed to update invoice. ${error}`)
+        return {
+            message: 'Database error: Failed to update invoice.',
+        };
+    }
 
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
+}
+
+export async function deleteInvoice(id: string) {    
+    throw new Error('Failed to Delete Invoice');
+
+    const values = [id];
+
+    try {
+        await pool.query(deleteInvoiceSql, values);
+        revalidatePath('/dashboard/invoices');
+        return { message: 'Deleted Invoice.' };
+    } catch(error) {
+        console.error(`Database error: Failed to delete invoice. ${error}`)
+        return {
+            message: 'Database error: Failed to delete invoice.',
+        };
+    }    
 }
