@@ -31,11 +31,7 @@ export async function fetchRevenue() {
     // Don't do this in production :)
 
     console.log('Revenue: Fetching data...');
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
     const data = await pool.query<Revenue>(`SELECT * FROM revenue`);
-
-    console.log('Revenue: Data fetch completed after 3 seconds.');
 
     return data.rows;
   } catch (error) {
@@ -48,7 +44,6 @@ export async function fetchLatestInvoices() {
   noStore();
   try {
     console.log('Latest invoices: Fetching latest data...');
-    await new Promise((resolve) => setTimeout(resolve, 4000));
 
     const data = await pool.query<LatestInvoiceRaw>(`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
@@ -56,8 +51,6 @@ export async function fetchLatestInvoices() {
       JOIN customers ON invoices.customer_id = customers.id
       ORDER BY invoices.date DESC
       LIMIT 5`);
-
-    console.log('Latest invoices: Data fetch completed after 3 seconds.');
 
     const latestInvoices = data.rows.map((invoice) => ({
       ...invoice,
