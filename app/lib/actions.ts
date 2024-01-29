@@ -4,7 +4,7 @@ import { z } from 'zod';
 import pkg from 'pg';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { InvoiceForm } from './definitions';
+import { CustomerStateType, InvoiceForm } from './definitions';
 import { signIn } from '@/auth';
 const { Pool } = pkg;
 import { AuthError } from 'next-auth';
@@ -38,6 +38,18 @@ const pool = new Pool({
 const createInvoiceSql = `INSERT INTO invoices (customer_id, amount, status, date) VALUES ($1, $2, $3, $4)`;
 const updateInvoiceSql = `UPDATE invoices SET customer_id=$1, amount=$2, status=$3 WHERE id=$4`;
 const deleteInvoiceSql = `DELETE FROM invoices WHERE id=$1`;
+
+const customerStateSql = `SELECT 
+                            COUNT(invoices.id) AS total_invoices,
+                            SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
+                            SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+                          FROM 
+                            invoices
+                          WHERE
+                            invoices.customer_id=$1`;
+
+const deleteCustomerSql = `DELETE FROM customers WHERE id=$1`;
+
 
 
 export type State = {
@@ -125,6 +137,29 @@ export async function deleteInvoice(id: string) {
         console.error(`Database error: Failed to delete invoice. ${error}`)
         return {
             message: 'Database error: Failed to delete invoice.',
+        };
+    }    
+}
+
+export async function deleteCustomer(id: string) {    
+    const values = [id];
+
+    try {
+        const customerState = await pool.query<CustomerStateType>(customerStateSql, values)
+        if (customerState.rowCount > 0 && customerState.rows[0].total_invoices > 0) {
+            console.error(`Failed to delete customer. First remove relative invoices count: ${customerState.rows[0].total_invoices}`)
+            return {
+                message: `Failed to delete customer. First remove relative invoices count: ${customerState.rows[0].total_invoices}`,
+            };    
+        } else {
+            await pool.query(deleteCustomerSql, values);
+            revalidatePath('/dashboard/customers');
+            return { message: 'Deleted customer.' };
+        }
+    } catch(error) {
+        console.error(`Database error: Failed to delete customer. ${error}`)
+        return {
+            message: 'Database error: Failed to delete customer.',
         };
     }    
 }

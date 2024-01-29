@@ -1,0 +1,11 @@
+
+// import { Metadata } from "next";
+// import DashboardSkeleton from "../../ui/skeletons";
+
+// export const metadata: Metadata = {
+//     title: 'Loading',
+//   };
+
+// export default function Loading() {
+//     return <DashboardSkeleton />;
+// }

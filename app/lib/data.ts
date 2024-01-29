@@ -9,6 +9,7 @@ import {
   LatestInvoiceRaw,
   User,
   Revenue,
+  CustomerForm,
 } from './definitions';
 import { formatCurrency } from './utils';
 import { unstable_noStore as noStore } from 'next/cache';
@@ -130,7 +131,11 @@ export async function fetchFilteredInvoices(
     // console.log(`The query search is: %${query}%`)
 
     const values = [`%${query}%`, ITEMS_PER_PAGE, offset]
+
+    console.log('Fetching customers data...');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     const invoices = await pool.query<InvoicesTable>(queryStr, values);
+    console.log('Customers data fetch completed after 3 seconds.');
 
     return invoices.rows;
   } catch (error) {
@@ -210,26 +215,38 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
-  noStore();
+export async function fetchFilteredCustomers(
+  query: string,
+  currentPage: number,
+) {
+  noStore();  
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  console.log(`Offset: ${offset}`)
   try {
-    const data = await pool.query<CustomersTableType>(`
-		SELECT
-		  customers.id,
-		  customers.name,
-		  customers.email,
-		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
-		FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
-		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `);
+    const queryString = `SELECT
+                          customers.id,
+                          customers.name,
+                          customers.email,
+                          customers.image_url,
+                          COUNT(invoices.id) AS total_invoices,
+                          SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
+                          SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+                        FROM customers
+                        LEFT JOIN invoices ON customers.id = invoices.customer_id
+                        WHERE
+                          customers.name ILIKE $1
+                          OR customers.email ILIKE $1
+                        GROUP BY customers.id, customers.name, customers.email, customers.image_url
+                        ORDER BY customers.name ASC
+                        LIMIT $2 OFFSET $3`;
+
+    const values = [`%${query}%`, ITEMS_PER_PAGE, offset]
+
+
+    // console.log('Fetching customers data...');
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    const data = await pool.query<CustomersTableType>(queryString, values);
+    // console.log('Customers data fetch completed after 3 seconds.');
 
     const customers = data.rows.map((customer) => ({
       ...customer,
@@ -241,6 +258,47 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
+  }
+}
+
+export async function fetchCustomersPages(query: string) {
+  noStore();
+  const queryString = `SELECT COUNT(*)
+                        FROM customers
+                      WHERE
+                        name ILIKE $1 OR
+                        email ILIKE $1`;
+
+  const values = [`%${query}%`];
+
+  try {
+    const count = await pool.query(queryString, values);
+
+    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of customers.');
+  }
+}
+
+export async function fetchCustomerById(id: string) {
+  noStore();
+  try {
+    const query = `SELECT
+                      customers.id,
+                      customers.name,
+                      customers.email,
+                      customers.image_url
+                  FROM customers
+                  WHERE customer.id = $1;`
+
+    const values = [id];
+
+    return await pool.query<CustomerForm>(query, values);
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch invoice.');
   }
 }
 

@@ -6,6 +6,7 @@ services:
       - 6432:6432
     volumes:
       - db:/var/libpostgresql/data
+      - db-var-run:/var/run/postgresql
     environment:
       - POSTGRES_PASSWORD
       - POSTGRES_USER
@@ -13,9 +14,10 @@ services:
     command: -p 6432
 
 volumes:
-  db:
+   db:
     driver: local
-
+   db-var-run:
+    driver: local
 
   # maria-db:
   #   image: mariadb:10.11

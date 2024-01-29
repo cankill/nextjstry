@@ -5,6 +5,7 @@ import {
   HomeIcon,
   DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
+import { PiGraphDuotone } from "react-icons/pi";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
@@ -15,6 +16,7 @@ const links = [
   { name: 'Home',      href: '/dashboard',           icon: HomeIcon },
   { name: 'Invoices',  href: '/dashboard/invoices',  icon: DocumentDuplicateIcon },
   { name: 'Customers', href: '/dashboard/customers', icon: UserGroupIcon },
+  { name: 'Nodes',     href: '/dashboard/nodes',     icon: PiGraphDuotone },
 ];
 
 export default function NavLinks() {
@@ -34,7 +36,7 @@ export default function NavLinks() {
               },
             )}
           >
-            <LinkIcon className="w-6" />
+            <LinkIcon className="w-6" size="28"/>
             <p className="hidden md:block">{link.name}</p>
           </Link>
         );
