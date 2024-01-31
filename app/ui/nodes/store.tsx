@@ -1,25 +1,24 @@
-import { Edge, Node, OnConnect, OnEdgesChange, OnNodesChange, applyEdgeChanges, applyNodeChanges } from "reactflow";
+import { Edge, Node, OnConnect, OnEdgesChange, OnNodesChange, addEdge, applyEdgeChanges, applyNodeChanges } from "reactflow";
 import { create } from "zustand";
-import { nanoid } from "nanoid";
 
-interface NodesState {
+import initialNodes from './nodes';
+import initialEdges from './edges';
+
+export interface NodesState {
     nodes: Node[],
     edges: Edge[],
     onNodesChange: OnNodesChange,
     onEdgesChange: OnEdgesChange,
     onConnect: OnConnect,
-    addEdge(data: Edge): void
 }
 
-export const useStore = create<NodesState>()((set, get) => ({
-    nodes: [],
-    edges: [],
+
+const useStore = create<NodesState>()((set, get) => ({
+    nodes: initialNodes,
+    edges: initialEdges,
     onNodesChange: (changes) => set((state) => ({ nodes: applyNodeChanges(changes, get().nodes)})),
     onEdgesChange: (changes) => set((state) => ({ edges: applyEdgeChanges(changes, get().edges)})),
-    onConnect: (changes) => set((state) => ({ edges: applyEdgeChanges(changes, get().edges)})),
-    addEdge: (data) => {
-        const id: string = nanoid(6);
-        const edge: Edge = { ...data, id };
-        set((state) => ({ edges: [edge, ...get().edges] }));
-    },
+    onConnect: (connection) => set((state) => ({ edges: addEdge(connection, get().edges)})),
 }));
+
+export default useStore;
