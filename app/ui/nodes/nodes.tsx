@@ -3,20 +3,26 @@ import { Node } from 'reactflow';
 export default [
   {
     id: '1',
-    type: 'input',
-    data: { label: 'Input' },
-    position: { x: 250, y: 25 },
+    type: 'osc',
+    data: { frequency: 220, type: 'square' },
+    position: { x: 0, y: 0 },
   },
-
   {
     id: '2',
-    data: { label: 'Default' },
-    position: { x: 100, y: 125 },
-  },
+    type: 'osc',
+    data: { frequency: 20, type: 'sine' },
+    position: { x: 200, y: 0 },
+  }, 
   {
     id: '3',
-    type: 'output',
-    data: { label: 'Output' },
-    position: { x: 250, y: 250 },
+    type: 'gain',
+    data: { gain: 0.5 },
+    position: { x: 0, y: 250 },
+  },  
+  {
+    id: '4',
+    type: 'gain',
+    data: { gain: 0.89 },
+    position: { x: 200, y: 400 },
   },
 ] as Node[];

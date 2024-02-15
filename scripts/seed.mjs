@@ -154,8 +154,6 @@ async function main() {
     port: 6432
   })
 
-  console.log(await pool.query('SELECT NOW()'))
-
   await seedUsers(pool);
   await seedCustomers(pool);
   await seedInvoices(pool);

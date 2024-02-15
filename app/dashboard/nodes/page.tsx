@@ -1,10 +1,11 @@
 'use client';
 
+import Osc from "@/app/ui/nodes/Osc";
 import useStore, { NodesState } from "@/app/ui/nodes/store";
 import ReactFlow, { ReactFlowProvider, Background } from "reactflow";
-
-import 'reactflow/dist/style.css';
 import { useShallow } from 'zustand/react/shallow'
+import 'reactflow/dist/style.css'
+import Gain from "@/app/ui/nodes/Gain";
  
 const selector = (store: NodesState) =>  ({
   nodes: store.nodes,
@@ -14,8 +15,12 @@ const selector = (store: NodesState) =>  ({
   onConnect: store.onConnect,
 });
 
-export default function Page() {
+const nodeTypes = {
+  osc: Osc,
+  gain: Gain
+};
 
+export default function Page() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useStore(useShallow(selector));
 
   return (
@@ -23,6 +28,7 @@ export default function Page() {
       <ReactFlowProvider>
         <ReactFlow
         nodes={nodes}
+        nodeTypes={nodeTypes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
