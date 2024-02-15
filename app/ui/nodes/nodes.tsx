@@ -25,4 +25,9 @@ export default [
     data: { gain: 0.89 },
     position: { x: 200, y: 400 },
   },
+  {
+    id: '5',
+    type: 'out',
+    position: { x: 246, y: 550 },
+  },
 ] as Node[];
