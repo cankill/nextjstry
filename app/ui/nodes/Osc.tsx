@@ -9,8 +9,8 @@ const selector = (id: string) => (store: NodesState) =>  ({
     setFrequency: (e: ChangeEvent<HTMLInputElement>) => {
         store.updateNode(id, { frequency: parseInt(e.target.value) });
     },
-    setType: (e: ChangeEvent) => store.updateNode(id, { type: e.target.nodeValue ? e.target.nodeValue : undefined })
-  });
+    setType: (e: ChangeEvent<HTMLSelectElement>) => store.updateNode(id, { type: e.target.value })
+});
 
 const Osc = ({id, data}: NodeProps<OscData>) => {
     const {setFrequency, setType } = useStore(useShallow(selector(id)));
